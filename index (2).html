@@ -1,0 +1,492 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>For SUKI — Happy New Year 2026</title>
+
+  <style>
+    :root{
+      --bg1:#071232;
+      --bg2:#0b2546;
+      --accent:#ffd166;
+      --muted:rgba(255,255,255,0.85);
+    }
+
+    html,body{
+      height:100%;
+      margin:0;
+      font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, monospace;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      background: linear-gradient(160deg,var(--bg1) 0%, var(--bg2) 100%);
+      color:var(--muted);
+      overflow:hidden;
+    }
+
+    /* LOCK SCREEN */
+    #lock{
+      position:fixed;
+      inset:0;
+      background:linear-gradient(180deg, rgba(0,0,0,0.6), rgba(3,10,20,0.85));
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      flex-direction:column;
+      z-index:30;
+      gap:.6rem;
+      padding:24px;
+      box-sizing:border-box;
+      text-align:center;
+    }
+    #lock h2{margin:0;font-size:1.25rem}
+    #lock input{
+      padding:10px 12px;
+      font-size:16px;
+      margin-top:6px;
+      border-radius:8px;
+      border:1px solid rgba(255,255,255,0.06);
+      background:rgba(255,255,255,0.02);
+      color:var(--muted);
+      outline:none;
+    }
+    #lock button{
+      padding:8px 14px;
+      margin-top:6px;
+      font-size:15px;
+      cursor:pointer;
+      border-radius:9px;
+      border:none;
+      color:#071232;
+      background:linear-gradient(90deg,var(--accent),#ef476f);
+      box-shadow:0 8px 20px rgba(239,71,111,0.12);
+    }
+
+    /* MAIN */
+    #main{
+      display:none;
+      position:relative;
+      width:100%;
+      height:100vh;
+      padding:48px 20px 24px 20px;
+      box-sizing:border-box;
+      z-index:10;
+      pointer-events:auto;
+    }
+    .center{
+      max-width:980px;
+      margin:0 auto;
+      text-align:center;
+    }
+
+    h1.headline{
+      font-size:clamp(2rem,6vw,5rem);
+      margin:0;
+      line-height:1;
+      letter-spacing:-0.02em;
+      color:linear-gradient(90deg,#fff,#ffd166);
+      text-shadow:0 8px 28px rgba(0,0,0,0.6);
+    }
+    .headline strong{ color: var(--accent); }
+
+    .sub{ margin-top:.4rem; color:rgba(255,255,255,0.9); font-size:1.05rem }
+
+    /* countdown */
+    .countdown{ display:flex; gap:.6rem; justify-content:center; margin-top:1rem; flex-wrap:wrap }
+    .unit{
+      min-width:88px;
+      padding:.6rem .9rem;
+      border-radius:12px;
+      background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.06));
+      box-shadow:0 6px 20px rgba(2,6,23,0.45);
+      font-weight:700;
+    }
+    .unit .num{ font-size:1.25rem; display:block }
+    .unit .lbl{ font-size:.75rem; opacity:.85; margin-top:.18rem; display:block }
+
+    /* typed messages */
+    #code{ margin-top:18px; display:flex; flex-direction:column; gap:.35rem; align-items:center; }
+    .say{
+      font-size:18px;
+      opacity:0;
+      transform:translateY(6px);
+      transition: all 420ms cubic-bezier(.2,.9,.2,1);
+      color: #ffdfe6;
+    }
+    .say.visible{ opacity:1; transform:translateY(0) }
+
+    /* controls */
+    .controls{ margin-top:12px; display:flex; gap:.5rem; justify-content:center; flex-wrap:wrap }
+    .btn{
+      background:linear-gradient(90deg,var(--accent),#ef476f);
+      color:#071232;
+      border:none;
+      padding:.5rem .8rem;
+      border-radius:10px;
+      font-weight:700;
+      cursor:pointer;
+    }
+    .small{ padding:.35rem .6rem; font-size:.9rem }
+
+    footer{ position:fixed; right:12px; bottom:12px; font-size:.85rem; opacity:.75; z-index:12 }
+
+    /* falling hearts (from your original) */
+    .heart{
+      position:fixed;
+      top:-20px;
+      font-size:20px;
+      animation:fall linear forwards;
+      color:pink;
+      z-index:5;
+      pointer-events:none;
+    }
+    @keyframes fall{
+      to{
+        transform:translateY(110vh) rotate(20deg);
+        opacity:0;
+      }
+    }
+
+    /* canvas (fireworks & confetti) */
+    canvas{
+      position:fixed;
+      left:0; top:0;
+      width:100%;
+      height:100%;
+      z-index:0;
+      pointer-events:none;
+    }
+
+    @media (max-width:520px){
+      .unit{ min-width:64px; padding:.5rem .6rem }
+      h1.headline{ font-size:2.2rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- LOCK SCREEN -->
+  <div id="lock" role="dialog" aria-modal="true" aria-label="Enter magic word">
+    <h2>🔒 Enter the magic word</h2>
+    <input id="pass" placeholder="Only SUKI knows 😌" aria-label="password">
+    <div style="display:flex;gap:.5rem;">
+      <button id="enterBtn">Enter</button>
+      <button id="hintBtn" style="background:transparent;color:var(--muted);border:1px solid rgba(255,255,255,0.06);">Hint</button>
+    </div>
+    <div id="lockMsg" style="margin-top:.6rem;color:#ffb6c1;opacity:.95;font-size:.95rem"></div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div id="main" aria-live="polite">
+    <canvas id="fx"></canvas>
+
+    <div class="center">
+      <h1 class="headline">Happy New Year <strong>2026</strong> — For SUKI 💖</h1>
+      <div class="sub">Wishing you a joyful, bright and prosperous new year. Click anywhere to pop fireworks!</div>
+
+      <div id="countdown" class="countdown" aria-hidden="false" role="status" aria-live="polite">
+        <div class="unit"><span class="num" id="days">0</span><span class="lbl">Days</span></div>
+        <div class="unit"><span class="num" id="hours">00</span><span class="lbl">Hours</span></div>
+        <div class="unit"><span class="num" id="minutes">00</span><span class="lbl">Minutes</span></div>
+        <div class="unit"><span class="num" id="seconds">00</span><span class="lbl">Seconds</span></div>
+      </div>
+
+      <div id="code" aria-hidden="false">
+        <div class="say">Hey you 💞</div>
+        <div class="say">SUKI MUKI — HAPPY NEW YEAR ✨</div>
+        <div class="say">LOVE YOU SO MUCH SUKI &lt;3</div>
+        <div class="say">Just saying... you're pretty awesome ❤️</div>
+        <div class="say">Sending good vibes and maybe a wink 😏</div>
+        <div class="say">Hope you have a magical 2026 ❤️😘</div>
+      </div>
+
+      <div class="controls">
+        <button id="burstBtn" class="btn small">Burst Fireworks</button>
+        <button id="toggleConfetti" class="btn small">Toggle Confetti</button>
+        <button id="muteBtn" class="btn small">Mute</button>
+      </div>
+    </div>
+
+    <footer>Made with ✨ for 2026 — For SUKI</footer>
+  </div>
+
+  <!-- AUDIO: replace "audio.mp3" with your file -->
+  <audio id="music" loop preload="auto">
+    <source src="audio.mp3" type="audio/mp3">
+  </audio>
+
+  <script>
+    /* ======= LOCK BEHAVIOR ======= */
+    const lock = document.getElementById('lock');
+    const main = document.getElementById('main');
+    const enterBtn = document.getElementById('enterBtn');
+    const hintBtn = document.getElementById('hintBtn');
+    const lockMsg = document.getElementById('lockMsg');
+    const passInput = document.getElementById('pass');
+
+    function unlockAction(){
+      const val = passInput.value.trim().toLowerCase();
+      if(!val){ lockMsg.textContent = "Type the magic word to continue ✨"; return; }
+      if(val === 'suki'){
+        lock.style.display = 'none';
+        main.style.display = 'block';
+        startEverything();
+      } else {
+        lockMsg.textContent = "Nope — that's not it. Try again 💕";
+        passInput.value = '';
+      }
+    }
+
+    enterBtn.addEventListener('click', unlockAction);
+    passInput.addEventListener('keydown', e => { if(e.key === 'Enter') unlockAction(); });
+    hintBtn.addEventListener('click', ()=> lockMsg.textContent = "It's her name... sweet and simple 💖" );
+
+    /* ======= TYPING LINES ======= */
+    function showLines(){
+      const lines = document.querySelectorAll('.say');
+      lines.forEach((line, i) => {
+        setTimeout(()=> line.classList.add('visible'), i * 900);
+      });
+    }
+
+    /* ======= CLOCK COUNTDOWN TO 2026-01-01 ======= */
+    const DAYS = document.getElementById('days');
+    const HOURS = document.getElementById('hours');
+    const MINS = document.getElementById('minutes');
+    const SECS = document.getElementById('seconds');
+
+    function updateCountdown(){
+      const now = new Date();
+      // local midnight of Jan 1, 2026
+      const target = new Date(now.getFullYear() <= 2025 ? 2026 : now.getFullYear()+1, 0, 1, 0, 0, 0);
+      const diff = Math.max(0, target - now);
+      const s = Math.floor(diff/1000);
+      const d = Math.floor(s/86400);
+      const h = Math.floor((s%86400)/3600);
+      const m = Math.floor((s%3600)/60);
+      const sec = s%60;
+      DAYS.textContent = d;
+      HOURS.textContent = String(h).padStart(2,'0');
+      MINS.textContent = String(m).padStart(2,'0');
+      SECS.textContent = String(sec).padStart(2,'0');
+    }
+    let countdownInterval = null;
+
+    /* ======= FALLING HEARTS ======= */
+    function startHearts(){
+      setInterval(()=>{
+        const h = document.createElement('div');
+        h.className = 'heart';
+        h.innerText = choose(['💖','💕','💘','❣️']);
+        h.style.left = (Math.random()*90+3) + 'vw';
+        h.style.fontSize = (12 + Math.random()*28) + 'px';
+        h.style.animationDuration = (2 + Math.random()*4) + 's';
+        document.body.appendChild(h);
+        setTimeout(()=> h.remove(), 7000);
+      }, 420);
+    }
+
+    /* ======= FIREWORKS & CONFETTI ON CANVAS ======= */
+    const canvas = document.getElementById('fx');
+    const ctx = canvas.getContext('2d', { alpha: true });
+    let W = canvas.width = innerWidth, H = canvas.height = innerHeight;
+    const DPR = Math.max(1, devicePixelRatio || 1);
+
+    function resize(){
+      W = canvas.width = innerWidth * DPR;
+      H = canvas.height = innerHeight * DPR;
+      canvas.style.width = innerWidth + 'px';
+      canvas.style.height = innerHeight + 'px';
+      ctx.setTransform(DPR,0,0,DPR,0,0);
+    }
+    addEventListener('resize', resize, { passive:true });
+    resize();
+
+    const TAU = Math.PI*2;
+    const COLORS = ['#ffd166','#06d6a0','#118ab2','#ef476f','#06b6d4','#ffd6a5','#bde0fe','#f72585'];
+    const particles = [];
+    let confettiEnabled = true;
+
+    function rand(a,b){ return Math.random()*(b-a)+a; }
+    function choose(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+    class Particle {
+      constructor(x,y,vx,vy,color,ttl=1.6){
+        this.x = x; this.y = y; this.vx = vx; this.vy = vy;
+        this.color = color;
+        this.life = 0;
+        this.ttl = ttl;
+        this.size = rand(1.5,3.8);
+      }
+      step(dt){
+        this.life += dt;
+        this.x += this.vx * dt;
+        this.y += this.vy * dt;
+        this.vy += 120 * dt; // gravity
+        this.vx *= 0.995;
+        this.vy *= 0.999;
+        return this.life < this.ttl;
+      }
+      draw(ctx){
+        const t = 1 - (this.life / this.ttl);
+        ctx.globalAlpha = Math.max(0, t);
+        ctx.fillStyle = this.color;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size * Math.max(0.5, t), 0, TAU);
+        ctx.fill();
+      }
+    }
+
+    class Confetto {
+      constructor(x,y,color){
+        this.x=x; this.y=y; this.size=rand(6,12); this.color=color;
+        this.vx = rand(-40,40); this.vy = rand(-40,-80);
+        this.life=0; this.ttl=rand(2.2,4.0); this.rot = rand(0,TAU);
+        this.omega = rand(-6,6);
+      }
+      step(dt){
+        this.life+=dt;
+        this.x += this.vx*dt;
+        this.y += this.vy*dt;
+        this.vy += 220*dt;
+        this.vx *= 0.995;
+        this.rot += this.omega*dt;
+        return this.life < this.ttl && this.y < H+50;
+      }
+      draw(ctx){
+        ctx.save();
+        ctx.translate(this.x,this.y);
+        ctx.rotate(this.rot);
+        ctx.fillStyle = this.color;
+        ctx.fillRect(-this.size/2, -this.size/2, this.size, this.size*0.6);
+        ctx.restore();
+      }
+    }
+
+    function spawnFirework(x,y,spread=1){
+      const count = Math.floor(rand(20,60));
+      const baseColor = choose(COLORS);
+      for(let i=0;i<count;i++){
+        const ang = rand(0,TAU);
+        const speed = rand(50, 420) * spread;
+        const vx = Math.cos(ang) * speed;
+        const vy = Math.sin(ang) * speed;
+        particles.push(new Particle(x,y,vx,vy, choose(COLORS), rand(1.0,2.6)));
+      }
+      // extra sparkles
+      for(let i=0;i<8;i++){
+        const ang = rand(0,TAU);
+        const speed = rand(80, 200);
+        particles.push(new Particle(x,y,Math.cos(ang)*speed,Math.sin(ang)*speed, '#fff', 0.8));
+      }
+      // burst confetti
+      if(confettiEnabled){
+        for(let i=0;i<30;i++){
+          confettis.push(new Confetto(x + rand(-20,20), y + rand(-20,20), choose(COLORS)));
+        }
+      }
+    }
+
+    // small auto-launch firework from bottom to a target point
+    function launchFromBottom(targetX){
+      const sx = rand(0.2*innerWidth, 0.8*innerWidth);
+      const sy = innerHeight + 10;
+      const tx = targetX || rand(0.2*innerWidth, 0.8*innerWidth);
+      const ty = rand(innerHeight*0.12, innerHeight*0.45);
+      // animate simple rocket up (we just spawn on end)
+      const travel = 700; // px/sec approx
+      const duration = Math.max(0.6, Math.abs(ty - sy) / travel);
+      // faux rocket using timeout to spawn final firework
+      setTimeout(()=> spawnFirework(tx, ty, 1), duration*1000);
+    }
+
+    const confettis = [];
+
+    // main loop
+    let last = performance.now();
+    function loop(now){
+      const dt = Math.min(0.04, (now - last)/1000);
+      last = now;
+      // clear
+      ctx.clearRect(0,0, innerWidth, innerHeight);
+
+      // draw and update particles
+      for(let i = particles.length - 1; i >= 0; i--){
+        const p = particles[i];
+        if(!p.step(dt)) particles.splice(i,1);
+        else p.draw(ctx);
+      }
+
+      // confetti
+      for(let i = confettis.length - 1; i >= 0; i--){
+        const c = confettis[i];
+        if(!c.step(dt)) confettis.splice(i,1);
+        else c.draw(ctx);
+      }
+
+      requestAnimationFrame(loop);
+    }
+
+    // interaction
+    canvas.addEventListener('click', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      spawnFirework(x, y, 1);
+    }, { passive:true });
+
+    // convenience controls
+    document.getElementById('burstBtn').addEventListener('click', ()=>{
+      // big burst center
+      spawnFirework(innerWidth*0.5, innerHeight*0.33, 1.4);
+      spawnFirework(innerWidth*0.3, innerHeight*0.4, 1.1);
+      spawnFirework(innerWidth*0.7, innerHeight*0.42, 1.1);
+    });
+    document.getElementById('toggleConfetti').addEventListener('click', ()=>{
+      confettiEnabled = !confettiEnabled;
+      alert('Confetti ' + (confettiEnabled ? 'enabled' : 'disabled'));
+    });
+
+    /* ======= AUDIO BEHAVIOR ======= */
+    const audio = document.getElementById('music');
+    const muteBtn = document.getElementById('muteBtn');
+    let muted = false;
+    muteBtn.addEventListener('click', ()=>{
+      muted = !muted;
+      audio.muted = muted;
+      muteBtn.textContent = muted ? 'Unmute' : 'Mute';
+    });
+
+    // attempt to play audio on interaction (most mobile browsers require user gesture)
+    document.addEventListener('click', ()=> {
+      if(!audio.playing && !audio.paused){
+        // nothing
+      }
+      audio.play().catch(()=>{/* ignore autoplay block */});
+    }, { once:true });
+
+    /* ======= START ALL ======= */
+    function startEverything(){
+      // start display sequences
+      showLines();
+      updateCountdown();
+      countdownInterval = setInterval(updateCountdown, 1000);
+      startHearts();
+      // small auto fireworks for life
+      setInterval(()=> launchFromBottom(), 1400);
+      // start loop
+      last = performance.now();
+      requestAnimationFrame(loop);
+      // try to play audio
+      audio.play().catch(()=>{/* user interaction required */});
+    }
+
+    // helper to ensure canvas sizes match on load
+    addEventListener('load', resize);
+
+    // expose some helpers to console for fun
+    window.spawnFirework = spawnFirework;
+    window.confettis = confettis;
+  </script>
+</body>
+</html>
